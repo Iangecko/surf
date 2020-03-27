@@ -341,6 +341,8 @@ setup(void)
 	cachedir   = buildpath(cachedir);
 	certdir    = buildpath(certdir);
 
+	iconfile   = buildfile(iconfile);
+
 	gdkkb = gdk_seat_get_keyboard(gdk_display_get_default_seat(gdpy));
 
 	if (pipe(pipeout) < 0 || pipe(pipein) < 0) {
@@ -625,6 +627,7 @@ updatetitle(Client *c)
 	                   c->title ? c->title : "";
 
 	if (curconfig[ShowIndicators].val.i) {
+		/*
 		gettogglestats(c);
 		getpagestats(c);
 
@@ -634,6 +637,9 @@ updatetitle(Client *c)
 		else
 			title = g_strdup_printf("%s:%s | %s",
 			        togglestats, pagestats, name);
+		*/
+
+		title = g_strdup_printf(windowtitle);
 
 		gtk_window_set_title(GTK_WINDOW(c->win), title);
 		g_free(title);
@@ -784,8 +790,9 @@ setparameter(Client *c, int refresh, ParamName p, const Arg *a)
 		refresh = 0;
 		break;
 	case HideBackground:
-		if (a->i)
+		if (a->i){
 			webkit_web_view_set_background_color(c->view, &bgcolor);
+		}
 		return; /* do not update */
 	case Inspector:
 		webkit_settings_set_enable_developer_extras(s, a->i);
@@ -1365,7 +1372,9 @@ winevent(GtkWidget *w, GdkEvent *e, Client *c)
 void
 showview(WebKitWebView *v, Client *c)
 {
-	GdkRGBA bgcolor = { 0 };
+	GdkRGBA bgcolor;										// Background color
+	memcpy(&bgcolor, &gtkbg, sizeof(GdkRGBA));
+
 	GdkWindow *gwin;
 
 	c->finder = webkit_web_view_get_find_controller(c->view);
@@ -1416,6 +1425,8 @@ createwindow(Client *c)
 		w = gtk_plug_new(embed);
 	} else {
 		w = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+		gtk_window_set_icon_from_file(GTK_WINDOW(w), iconfile, NULL); // Set window icon
 
 		wmstr = g_path_get_basename(argv0);
 		gtk_window_set_wmclass(GTK_WINDOW(w), wmstr, "Surf");
